@@ -1,0 +1,240 @@
+type RegistroDeCentroComercial is record { /*
+  PROPÓSITO: Modela la información que maneja
+    un ministerio sobre un centro comercial.
+  INV.REP:
+  * El campo idNegocio de cada negocio
+    en *impuestosPagados* corresponde al campo
+    *id* de algún negocio en *negocios*.
+  * No hay dos negocios en *negocios* con el
+    mismo id.
+*/
+  field impuestosPagados  // [ImpuestoPagado]
+  field negocios          // [Negocio]
+}
+
+type Negocio is record { /*
+  PROPÓSITO: Modelar un negocio del centro
+    comercial.
+  INV.REP:
+  * *id* es mayor a cero.
+  * *impuestos* no es vacía.
+  * No hay elementos repetidos en
+    *impuestos* ni en *clases*.
+*/
+  field id               // Número
+  field impuestosAPagar  // [Impuesto]
+  field clases           // [Clase]
+}
+
+type ImpuestoPagado is record { /*
+  PROPÓSITO: Modelar un impuesto pagado por
+    una empresa
+  INV.REP:
+  * *idNegocio* es mayor a cero.
+  * *monto* es mayor a cero.
+*/
+  field idNegocio        // Número
+  field impuesto         // Impuesto
+  field monto            // Número
+}
+
+type Impuesto is variant { /*
+  PROPÓSITO: Modelar los distintos tipos
+    de impuestos que pueden pagarse.
+*/
+  case Ganancias       {}
+  case IngresosBrutos  {}
+  case IVA             {}
+  case Sellos          {}
+  case Otros           {}
+}
+
+type Clase is variant { /*
+  PROPÓSITO: Modelar los distintas clases
+    de tiendas
+*/
+  case Kiosco          {}
+  case Almacén         {}
+  case Restaurante     {}
+  case Juguetería      {}
+}
+
+function registro_SinImpuesto_(centroComercial,impuesto){
+    /*
+    PROPOSITO: describa el mismo registro pero habiendo descartado 
+        todos los pagos de impuestos del impuesto dado y habiendo 
+        quitado de todos los impuestos a pagar de los negocios la 
+        dicho impuesto.
+    PARAMETROS:
+        - centroComercial: RegistroDeCentroComercial
+        - impuesto: Impuesto
+    PRECONDICIONES: Ninguna
+    TIPO: RegistroDeCentroComercial
+    */
+    
+    return(
+        RegistroDeCentroComercial( centroComercial |
+            impuestosPagados <- inpuestosPagados_SinLosImpuestosDeTipo_(impuestosPagados(centroComercial),impuesto)
+            negocios <- negocios_SinLosImpuestosDeTipo_(negocios(centroComercial),impuesto)
+        
+        )
+    
+    
+}
+
+function inpuestosPagados_SinLosImpuestosDeTipo_(impuestosPagados, impuesto){
+    /*
+    PROPOSITO: describa los impuestos pagaodos dados pero habiendo descartado 
+        todos los pagos de impuestos del impuesto dado.
+    PARAMETROS:
+        - impuestosPagados: [ImpuestoPagado]
+        - impuesto: Impuesto
+    PRECONDICIONES: Ninguna
+    TIPO: [ImpuestoPagado]
+    OBSERVACIONES: Recorrido de filtrado
+    */    
+    impuestosPagosFiltrados:= []
+    
+    foreach impuestoPagado in impuestosPagados{
+        impuestosPagosFiltrados:= impuestosPagosFiltrados ++ singular_Si_(impuestoPagado, not esImpuestoPago_De_(impuestoPagado,impuesto))
+    }
+    return(impuestosPagosFiltrados)
+    
+}
+
+
+function esImpuestoPago_De_(impuestoPagado, impuesto){
+    /*
+    PROPOSITO: indica si el impuesto pagado es del tipo de impuesto dado.
+    PARAMETROS:
+        - impuestoPagado: ImpuestoPagado
+        - impuesto: Impuesto
+    PRECONDICIONES: Ninguna
+    TIPO: Booleano
+    */ 
+    return(impuesto == impuesto(impuestoPagado))
+}
+
+function negocios_SinLosImpuestosDeTipo_(negocios, impuesto){
+    /*
+    PROPOSITO: describa los mismos negiocios dados pero sin los impuestos del tipo dados.
+    PARAMETROS:
+        - impuestosPagados: [Negocio]
+        - impuesto: Impuesto
+    PRECONDICIONES: Ninguna
+    TIPO: [Negocio]
+    OBSERVACIONES: Recorrido de transformacion
+    */    
+    
+    negociosSinElImpuesto:= []
+    
+    foreach negocio in negocios{
+        negociosSinElImpuesto:= negociosSinElImpuesto ++ [negocio_SinElImpuesto_(negocio, impuesto)]
+    }
+    return(negociosSinElImpuesto)
+    
+    
+}
+
+function negocio_SinElImpuesto_(negocio, impuesto){
+    /*
+    PROPOSITO: describa el mismos negiocio dados pero sin los impuestos del tipo dados.
+    PARAMETROS:
+        - negocio: [Negocio]
+        - impuesto: Impuesto
+    PRECONDICIONES: Ninguna
+    TIPO: [Negocio]
+    */  
+    return(
+        Negocio( negocio |
+            impuestosAPagar<- impuestosAPagar_SinElImpuesto_(impuestosAPagar(negocio, impuesto))
+            )
+        )
+}
+
+
+
+function impuestosAPagar_SinElImpuesto_(impuestosAPagar, impuesto){
+    /*
+    PROPOSITO: describa el mismos negiocio dados pero sin los impuestos del tipo dados.
+    PARAMETROS:
+        - impuestosAPagar: [Impuesto]
+        - impuesto: Impuesto
+    PRECONDICIONES: Ninguna
+    TIPO: [Impuesto]
+    OBSERVACIONES: Recorrido de busqueda y filtrado
+    */
+        
+    impuestosAPagarARecorrer := impuestosAPagar(negocio)
+    impuestosFiltrados:= []
+    
+    while(not esVacía(impuestosAPagarARecorrer) && primero(impuestosAPagarARecorrer) =/ impuesto){
+        impuestosFiltrados:= impuestosFiltrados ++ [primero(impuestosAPagarARecorrer)]
+        impuestosAPagarARecorrer:= resto(impuestosAPagarARecorrer)
+    }
+    
+    return(impuestosFiltrados ++ impuestosAPagarARecorrer)
+}
+
+// PUNTO 2
+
+
+function claseQueMásAportaEnRegistro_(centroComercial){
+    /*
+    PROPOSITO: describa la clase que mas aporta en el centro comercial dado.
+    PARAMETROS:
+        - centroComercial: RegistroDeCentroComercial
+    PRECONDICIONES: no hay dos clases para los cuales la sumatoria de montos de pagos 
+        de impuestos que pertenecen a la clase sea igual.
+
+    TIPO: Clase
+    OBSERVACIONES: Recorrido de maximos por todas las clases.
+    */      
+    
+    claseARecorrer:= minClase()
+    claseQueMasAportaHastaAhora := minClase()
+    
+    while(claseARecorrer /= maxClase()){
+        claseQueMasAportaHastaAhora := claseQueMasAportaEntre_Y_En_(claseARecorrer,claseQueMasAportaHastaAhora, centroComercial)
+    }
+    return(claseQueMasAportaHastaAhora)
+    
+}
+
+function claseQueMasAportaEntre_Y_En_(primeraClase, segundaClase, centroComercial){
+    /*
+    PROPOSITO: describa la clase que mas aporta entre las clases dadas en el centro comercial dado.
+    PARAMETROS:
+        - primeraClase: Clase
+        - segundaClase: Clase
+        - centroComercial: RegistroDeCentroComercial
+    PRECONDICIONES: 
+        - primeraClase y segundaClase no pueden ser iguales.
+    TIPO: Clase
+    */  
+    return(
+        choose  primeraClase when montoRecaudadoDeClase_En_(claseARecorrer,centroComercial) > montoRecaudadoDeClase_En_(claseQueMasAportaHastaAhora,centroComercial)
+                segundaClase otherwise
+        )
+}
+
+    
+function montoRecaudadoDeClase_En_(clase, centroComercial){
+    /*
+    PROPOSITO: describa el monto recaudado de la clase dada en el centro Comercial dado.
+    PARAMETROS:
+        - clase: Clase
+        - centroComercial: RegistroDeCentroComercial
+    PRECONDICIONES: 
+        - Ninguna
+    TIPO: Numero
+    */      
+    
+    montoRecaudadoHastaAhora:= 0
+    
+    foreach impuestoPago in impuestosPagadosDeRegistro_QuePertenecenALaClase_(centroComercial, clase){
+        montoRecaudadoHastaAhora := montoRecaudadoHastaAhora +
+            monto(impuestoPago)
+    }
+    return(montoRecaudadoHastaAhora)
+}
