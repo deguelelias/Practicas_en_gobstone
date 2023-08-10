@@ -1,0 +1,134 @@
+function hayAlgúnPaísConMasDe_TuristasEnMismoCuadrante(cantidad){
+    /*
+    PROPOSITO: indica si alguno de los países cumple con tener al menos la 
+        cantidad dada de turistas en un mismo cuadrante de la plaza.
+    PARAMETROS:
+        - cantidad: Numero
+    PRECONDICIONES:
+        - cantidad debe ser mayor 0.
+    TIPO: Booleano
+    OBSERVACIONES: Recorrido de busqueda, buscando el cuandrante con al 
+        menos la cantidad dada de turistas de una misma nacionalidad
+    */
+    
+    IrAPrimeraCeldaEnUnRecorridoAl_Y_(Este, Norte)
+    
+    while(haySiguienteCeldaEnUnRecorridoAl_Y_(Este, Norte)  && not hayAlMenos_TuristasDeAlgunaNacionalidad()){
+            IrASiguienteCeldaEnUnRecorridoAl_Y_(Este, Norte)
+    }
+    
+    return(hayAlMenos_TuristasDeAlgunaNacionalidad())
+}
+
+
+function hayAlMenos_TuristasDeAlgunaNacionalidad(cantidad){
+    /*
+    PROPOSITO: indica si algun  paíse que cumple con tener al menos la 
+        cantidad dada de turistas en la celda actual.
+    PARAMETROS:
+        - cantidad: Numero
+    PRECONDICIONES:
+        - cantidad debe ser mayor 0.
+    TIPO: Booleano
+    OBSERVACIONES: Recorrido de busqueda por nacionalidades(Colores)
+    */
+    
+    nacionalidadARecorrer:= primeraNacion()
+    
+    while( nacionalidadARecorrer /= ultimaNacion() &&  cantidadDeTuristas_Acá(nacionalidadARecorrer) < cantidad ){
+        nacionalidadARecorrer:= siguiente(nacionalidadARecorrer)
+    }
+    
+    return(cantidadDeTuristas_Acá(nacionalidadARecorrer) >= cantidad)
+    
+    
+}
+
+function primeraNacion(){
+    return(minColor())
+}
+
+function ultimaNacion(){
+    return(maxColor())
+}
+
+
+//PUNTO 2
+
+function nombrePaísPredominanteEnPlaza(){
+    /*
+    PROPOSITO: describe el nombre del pais predominante de la plaza,
+        si no hay un pais predominante describe “No hay predominancia”.
+    PRECONDICIONES:
+        - Ninguna
+    TIPO: String
+    */
+    
+    return(
+        choose  nombrePaís(paisPredominanteEnPaza()) when hayPaísPredominanteEnPlaza()
+                “No hay predominancia”               otherwise
+        )
+    
+}
+
+function paisPredominanteEnPaza(){
+    /*
+    PROPOSITO: describe pais predominante de la plaza.
+    PRECONDICIONES:
+        - debe existir un pais con mayor predominancia.
+    TIPO: Color
+    OBSERVACIONES: recorrido de maximos sobre los paises.
+    */
+    nacionPredominanteHastaAhora:= primeraNacion()
+    nacionalidadARecorrer:= primeraNacion()
+    
+    while( nacionalidadARecorrer /= ultimaNacion()){
+        nacionalidadARecorrer:= siguiente(nacionalidadARecorrer)
+        nacionPredominanteHastaAhora:= paisPredominanteEntre_Y_(nacionPredominanteHastaAhora, nacionalidadARecorrer)
+    }
+    
+    return(nacionPredominanteHastaAhora)
+    
+}
+
+function paisPredominanteEntre_Y_(primerPais, segundoPais){
+    
+    /*
+    PROPOSITO: describe al pais predominante en la plaza entre los paises dados
+    PARAMETROS:
+        - primerPais: Color
+        - segundoPais: Color
+    PRECONDICIONES:
+        - primerPais y segundoPais no deben ser el mismo pais.
+    TIPO: Color
+    */   
+    
+    return(
+        choose  primerPais when( cantidadDeTuristasDe_EnLaPlaza(primerPais) > cantidadDeTuristasDe_EnLaPlaza(primerPais))
+                segundoPais otherwise
+        )
+}
+
+
+function cantidadDeTuristasDe_EnLaPlaza(pais){
+    /*
+    PROPOSITO: describe pais predominante de la plaza.
+    PARAMETROS:
+        - pais: Color
+    PRECONDICIONES:
+        - Ninguna
+    TIPO: Numero
+    OBSERVACIONES: recorrido de acumulacion por toda la plaza
+    */  
+    
+    cantidadDeTuristasHastaAhora:= cantidadDeTuristas_Acá(pais)
+    
+    IrAPrimeraCeldaEnUnRecorridoAl_Y_(Este, Norte)
+    
+    while(haySiguienteCeldaEnUnRecorridoAl_Y_(Este, Norte)){
+            IrASiguienteCeldaEnUnRecorridoAl_Y_(Este, Norte)
+            cantidadDeTuristasHastaAhora:= cantidadDeTuristasHastaAhora +
+                cantidadDeTuristas_Acá(pais)
+    }
+    return(cantidadDeTuristasHastaAhora)
+}
